@@ -1,0 +1,33 @@
+# Backend files (should be deployed separately or to a different service)
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+
+# Frontend development files
+frontend/node_modules/
+frontend/bun.lockb
+frontend/.env
+# Temporary and cache files
+*.log
+.DS_Store
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# Documentation that doesn't need deployment
+*.md
+plan*.md
+ejemplo_conversacion.json
+
+# Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Audio and media
+audio_files/
