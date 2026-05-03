@@ -53,8 +53,3 @@ bun.lockb
 # Frontend build output
 frontend/dist/
 frontend/build/
-
-.agents
-.github
-skill.md
-skills-lock.json
