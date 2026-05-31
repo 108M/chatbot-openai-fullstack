@@ -1,5 +1,3 @@
-	
-
 **Resumen:**
 
 La Inteligencia Artificial (IA) se ha consolidado como un componente disruptivo en la Ingeniería de *Software*, transformando fases críticas que van desde la ingeniería de requisitos y el prototipado hasta la implementación, validación y documentación. No obstante, la rápida evolución y constante cambio de estas tecnologías genera una brecha de conocimiento sobre qué herramientas seleccionar, en qué contextos aplicarlas y cómo integrarlas bajo estándares de eficiencia, seguridad y mantenibilidad. Este Trabajo de Fin de Grado aborda dicha problemática mediante una investigación aplicada dirigida a sistematizar el uso de la IA en el ciclo de vida del desarrollo.
