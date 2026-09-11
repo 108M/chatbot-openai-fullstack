@@ -27,8 +27,8 @@ ChatBot/
 │   ├── routes/       # Endpoints modulares
 │   ├── main.py       # Servidor principal
 │   └── requirements.txt
-├── vercel.json       # Configuración Vercel
-└── DEPLOYMENT_VERCEL.md  # Guía de despliegue
+├── docs/             # Documentación técnica adicional
+└── vercel.json       # Configuración Vercel
 ```
 
 ## 🚀 Despliegue en Vercel
@@ -38,8 +38,6 @@ ChatBot/
 ### Solución Recomendada:
 1. **Frontend en Vercel** (sitio estático) ✅
 2. **Backend en Railway/Render** (soporte WebSocket) ✅
-
-📖 **Lee la guía completa**: [DEPLOYMENT_VERCEL.md](./DEPLOYMENT_VERCEL.md)
 
 ### Quick Start - Despliegue
 
@@ -160,9 +158,9 @@ Ver archivos `.env.example` para más detalles.
 
 ## 📖 Documentación Adicional
 
-- [DEPLOYMENT_VERCEL.md](./DEPLOYMENT_VERCEL.md) - Guía completa de despliegue
-- [EMBEDDINGS_IMPLEMENTATION.md](./EMBEDDINGS_IMPLEMENTATION.md) - Implementación de embeddings
-- [plan.md](./plan.md) - Plan de desarrollo
+- [docs/EMBEDDINGS_IMPLEMENTATION.md](./docs/EMBEDDINGS_IMPLEMENTATION.md) - Implementación de embeddings
+- [docs/ELEVENLABS_DEPLOYMENT.md](./docs/ELEVENLABS_DEPLOYMENT.md) - Despliegue de la integración con ElevenLabs
+- [TFG_Markel_Alvarez.md](./TFG_Markel_Alvarez.md) - Memoria del TFG asociado a este caso de uso
 
 ## 🤝 Contribuir
 
@@ -193,5 +191,3 @@ otro proyecto.
 - Verifica que Bun se instale correctamente
 - Revisa los logs de build
 - Prueba el build localmente primero
-
-Para más ayuda, consulta [DEPLOYMENT_VERCEL.md](./DEPLOYMENT_VERCEL.md)

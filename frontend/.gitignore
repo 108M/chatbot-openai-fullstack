@@ -5,6 +5,9 @@ node_modules
 out
 dist
 *.tgz
+public/chunk-*.js
+public/chunk-*.js.map
+public/chunk-*.css
 
 # code coverage
 coverage
