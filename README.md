@@ -1,12 +1,8 @@
 # ChatBot - Aplicación Full-Stack con OpenAI
 
-> **Estado:** prototipo funcional, en desarrollo. Nació como caso de uso de
-> exploración para mi TFG (no es el repositorio final de la memoria); lo
-> mantengo público como muestra de arquitectura full-stack con IA
-> conversacional multimodal. Algunas partes (ver [plan.md](./plan.md)) siguen
-> sin terminar.
-
-Chatbot inteligente con React (frontend) y FastAPI (backend), que incluye:
+Chatbot conversacional multimodal full-stack (**React + FastAPI**), nacido
+como caso de uso práctico para explorar arquitecturas de IA conversacional
+durante mi TFG. Incluye:
 - 🤖 Chat en tiempo real con OpenAI GPT
 - 🎤 Text-to-Speech y Speech-to-Text con ElevenLabs
 - 👁️ Análisis de imágenes con OpenAI Vision
