@@ -160,7 +160,6 @@ Ver archivos `.env.example` para más detalles.
 
 - [docs/EMBEDDINGS_IMPLEMENTATION.md](./docs/EMBEDDINGS_IMPLEMENTATION.md) - Implementación de embeddings
 - [docs/ELEVENLABS_DEPLOYMENT.md](./docs/ELEVENLABS_DEPLOYMENT.md) - Despliegue de la integración con ElevenLabs
-- [TFG_Markel_Alvarez.md](./TFG_Markel_Alvarez.md) - Memoria del TFG asociado a este caso de uso
 
 ## 🤝 Contribuir
 
