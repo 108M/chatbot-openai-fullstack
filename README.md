@@ -1,5 +1,11 @@
 # ChatBot - Aplicación Full-Stack con OpenAI
 
+> **Estado:** prototipo funcional, en desarrollo. Nació como caso de uso de
+> exploración para mi TFG (no es el repositorio final de la memoria); lo
+> mantengo público como muestra de arquitectura full-stack con IA
+> conversacional multimodal. Algunas partes (ver [plan.md](./plan.md)) siguen
+> sin terminar.
+
 Chatbot inteligente con React (frontend) y FastAPI (backend), que incluye:
 - 🤖 Chat en tiempo real con OpenAI GPT
 - 🎤 Text-to-Speech y Speech-to-Text con ElevenLabs
@@ -8,9 +14,10 @@ Chatbot inteligente con React (frontend) y FastAPI (backend), que incluye:
 - 💾 Historial persistente con Supabase
 - 🔐 Autenticación JWT
 
-LINK DE RENDER: https://chatbot-app-markel.onrender.com
+- Demo backend: https://chatbot-app-markel.onrender.com
+- Demo frontend: https://chatbot-app-markel.vercel.app/
 
-LINK DE VERCEL: https://chatbot-app-markel.vercel.app/
+*(Los despliegues de demo pueden estar dormidos/desactualizados al ser un plan gratuito — para probarlo de verdad, sigue la sección de desarrollo local.)*
 
 ## 📁 Estructura del Proyecto
 
@@ -171,7 +178,9 @@ Ver archivos `.env.example` para más detalles.
 
 ## 📄 Licencia
 
-Este proyecto está bajo una licencia privada.
+Proyecto personal/portfolio, sin licencia de código abierto formal. Puedes
+leer el código con fines de aprendizaje; pregúntame antes de reutilizarlo en
+otro proyecto.
 
 ## 🐛 Troubleshooting
 
