@@ -32,7 +32,8 @@
     "noPropertyAccessFromIndexSignature": false,
 
  
-    "types": ["vite/client"] 
+    "types": [],
+    "ignoreDeprecations": "6.0" 
   },
   
 

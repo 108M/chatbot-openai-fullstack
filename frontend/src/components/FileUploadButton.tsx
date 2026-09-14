@@ -63,8 +63,9 @@ export function FileUploadButton({ onFileSelected, disabled = false }: Props) {
         onClick={handleClick}
         disabled={disabled}
         title="Subir archivo"
+        aria-label="Subir archivo"
       >
-        <Upload className="h-4 w-4" />
+        <Upload className="h-4 w-4" aria-hidden="true" />
       </Button>
     </>
   );

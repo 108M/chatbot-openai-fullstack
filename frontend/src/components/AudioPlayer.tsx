@@ -12,7 +12,6 @@ import {
 } from './ui/select';
 import { apiClient } from '../lib/apiClient';
 
-// ElevenLabs default voices
 const VOICES = [
   { voice_id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Mujer)' },
   { voice_id: '9BWtsMINqrJLrRacOk9x', name: 'Aria (Hombre)' },
@@ -72,7 +71,7 @@ export function AudioPlayer({ initialText = '' }: Props) {
   };
 
   return (
-    <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 space-y-4 text-card-foreground border-none">
+    <div className="p-4 rounded-lg bg-surface-container-lowest space-y-4 text-on-surface border border-outline-variant">
       <div className="space-y-2">
         <Label htmlFor="tts-text">Texto a Voz</Label>
         <Textarea
@@ -103,7 +102,7 @@ export function AudioPlayer({ initialText = '' }: Props) {
       <Button
         onClick={handleGenerate}
         disabled={isGenerating || !text.trim()}
-        className="w-full bg-black text-white hover:bg-zinc-900 border-none"
+        className="w-full bg-primary text-on-primary hover:bg-primary-fixed-variant border-none"
       >
         {isGenerating ? (
           <>
@@ -119,7 +118,7 @@ export function AudioPlayer({ initialText = '' }: Props) {
       </Button>
 
       {error && (
-        <div className="p-2 bg-red-100 border border-red-300 text-red-700 rounded text-sm">
+        <div className="p-2 bg-error-container/20 border border-error/30 text-error rounded text-sm">
           {error}
         </div>
       )}
@@ -136,7 +135,6 @@ export function AudioPlayer({ initialText = '' }: Props) {
             variant="outline"
             onClick={handleDownload}
             className="w-full"
-            style={{ color: 'oklch(0 0 0)', border: '1px solid oklch(0 0 0)' }}
           >
             <Download className="h-4 w-4 mr-2" />
             Download MP3

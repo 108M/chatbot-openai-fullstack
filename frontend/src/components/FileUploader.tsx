@@ -49,7 +49,6 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
       return;
     }
 
-    // Check if file already selected
     if (selectedFiles.some(f => f.file.name === file.name && f.file.size === file.size)) {
       setError('This file is already selected');
       return;
@@ -105,7 +104,6 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
       const files = selectedFiles.map(sf => sf.file);
       const response = await apiClient.analyzeMultiple(files, prompt || undefined, sessionId || undefined);
       
-      // Process results and show them
       const successCount = response.results.filter((r: any) => r.status === 'success').length;
       if (successCount > 0) {
         const analyses = response.results
@@ -117,7 +115,6 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
         onAnalysisComplete(analyses, 'file', responseSessionId);
       }
       
-      // Show errors if any
       const errorResults = response.results.filter((r: any) => r.status === 'error');
       if (errorResults.length > 0) {
         const errorMsg = errorResults.map((r: any) => `${r.filename}: ${r.error}`).join('\n');
@@ -144,7 +141,7 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
   };
 
   return (
-    <div className="p-4 border-t bg-gray-50">
+    <div className="p-4 border-t border-outline-variant bg-surface-container-low">
       {selectedFiles.length === 0 ? (
         <div
           onDrop={handleDrop}
@@ -152,7 +149,7 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
           onDragLeave={handleDragLeave}
           className={cn(
             'border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer',
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+            isDragging ? 'border-primary bg-primary-container/10' : 'border-outline-variant hover:border-outline'
           )}
         >
           <input
@@ -167,11 +164,11 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
             }}
           />
           <label htmlFor="file-upload" className="cursor-pointer">
-            <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm" style={{ color: 'oklch(0 0 0)' }}>
-              Suelta aquí o <span className="text-primary dark:text-primary" style={{ color: 'oklch(0 0 0)' }}>explorar</span>
+            <Upload className="h-8 w-8 mx-auto text-on-surface-variant mb-2" />
+            <p className="text-sm text-on-surface">
+              Suelta aquí o <span className="text-primary">explorar</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-on-surface-variant mt-1">
               Soporta múltiples archivos: TXT, PDF, PNG, JPG (máx 50MB cada uno)
             </p>
           </label>
@@ -180,7 +177,7 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
         <div className="space-y-3">
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {selectedFiles.map(selectedFile => (
-              <div key={selectedFile.id} className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+              <div key={selectedFile.id} className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-lg border border-outline-variant">
                 {selectedFile.type === 'image' && selectedFile.preview ? (
                   <img 
                     src={selectedFile.preview} 
@@ -188,17 +185,17 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
                     className="h-12 w-12 object-cover rounded"
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-muted rounded flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 bg-surface-container-high rounded flex items-center justify-center shrink-0">
                     {selectedFile.type === 'image' ? (
-                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      <ImageIcon className="h-6 w-6 text-on-surface-variant" />
                     ) : (
-                      <FileText className="h-6 w-6 text-muted-foreground" />
+                      <FileText className="h-6 w-6 text-on-surface-variant" />
                     )}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate text-card-foreground">{selectedFile.file.name}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium truncate text-on-surface">{selectedFile.file.name}</p>
+                  <p className="text-xs text-on-surface-variant">
                     {(selectedFile.file.size / 1024).toFixed(1)} KB
                   </p>
                 </div>
@@ -206,10 +203,12 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
                   variant="ghost" 
                   size="icon" 
                   onClick={() => removeFile(selectedFile.id)} 
-                  className="text-card-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                  className="text-on-surface-variant hover:bg-error-container/20 hover:text-error transition-colors duration-200"
                   disabled={isAnalyzing}
+                  aria-label="Eliminar archivo seleccionado"
+                  title="Eliminar archivo seleccionado"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             ))}
@@ -217,7 +216,7 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
 
           {selectedFiles.some(f => f.type === 'image') && (
             <div className="space-y-2">
-              <label htmlFor="prompt" className="text-sm font-medium text-card-foreground">
+              <label htmlFor="prompt" className="text-sm font-medium text-on-surface">
                 Prompt para imágenes (opcional)
               </label>
               <Textarea
@@ -251,7 +250,6 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
               variant="outline"
               onClick={clearAll}
               disabled={isAnalyzing}
-              style={{ color: 'oklch(0 0 0)', border: '1px solid oklch(0 0 0)' }}
             >
               Limpiar
             </Button>
@@ -260,7 +258,7 @@ export function FileUploader({ onAnalysisComplete, sessionId }: Props) {
       )}
 
       {error && (
-        <div className="mt-2 p-2 bg-red-100 border border-red-300 text-red-700 rounded text-sm whitespace-pre-wrap">
+        <div className="mt-2 p-2 bg-error-container/20 border border-error/30 text-error rounded text-sm whitespace-pre-wrap">
           {error}
         </div>
       )}

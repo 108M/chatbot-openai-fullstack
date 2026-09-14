@@ -2,7 +2,125 @@ import { create } from 'zustand';
 import type { Message, Session } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
-const API_URL = process.env.BUN_PUBLIC_API_URL || 'http://localhost:8000';
+// Helper seguro para leer variables de entorno
+function getEnv(): Record<string, string | undefined> {
+  try {
+    const env = (import.meta as any).env;
+    return env || {};
+  } catch {
+    return {};
+  }
+}
+
+const env = getEnv();
+const API_URL = env.BUN_PUBLIC_API_URL || env.VITE_API_URL || 'http://localhost:8000';
+
+// Detect demo mode automatically
+const hasCredentials = !!(env.VITE_SUPABASE_URL || env.SUPABASE_URL);
+const isDemoMode = !hasCredentials;
+
+// Demo data
+const DEMO_SESSIONS: Session[] = [
+  {
+    id: 'demo-session-1',
+    user_id: 'demo-user-id',
+    title: 'Optimización de Base de Datos',
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 'demo-session-2',
+    user_id: 'demo-user-id',
+    title: 'Análisis de Mercado Q3',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'demo-session-3',
+    user_id: 'demo-user-id',
+    title: 'Componentes React - UI',
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+    updated_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+];
+
+const DEMO_MSG_1_USER = "Necesito optimizar una consulta SQL que está tardando mucho. Aquí está la estructura de las tablas involucradas y un pantallazo del plan de ejecución actual.";
+
+const DEMO_MSG_1_ASSISTANT = `Analizando el plan de ejecución y la estructura de tus tablas, el cuello de botella principal es un **Sequential Scan** en la tabla \`usuarios_log\` debido a la falta de un índice adecuado para tu cláusula \`WHERE\`.
+
+Te sugiero crear un índice compuesto y reestructurar ligeramente el \`JOIN\`. Aquí tienes el código optimizado:
+
+\`\`\`sql
+CREATE INDEX idx_usuarios_log_fecha_estado 
+ON usuarios_log (fecha_creacion DESC, estado_id);
+
+SELECT 
+    u.nombre, 
+    u.email, 
+    COUNT(ul.id) as eventos_recientes
+FROM 
+    usuarios u
+INNER JOIN 
+    usuarios_log ul ON u.id = ul.usuario_id
+WHERE 
+    ul.fecha_creacion >= NOW() - INTERVAL '30 days'
+    AND ul.estado_id = 5
+GROUP BY 
+    u.id, u.nombre, u.email
+HAVING 
+    COUNT(ul.id) > 10;
+\`\`\`
+
+Después de aplicar este índice, corre un \`EXPLAIN ANALYZE\` nuevamente. Deberías ver un **Index Scan** o **Bitmap Heap Scan**, lo cual reducirá el tiempo de ejecución significativamente.`;
+
+const DEMO_MSG_2_USER = "Analiza los datos de ventas del Q3 y dime qué productos tuvieron mejor margen.";
+
+const DEMO_MSG_2_ASSISTANT = `Basándome en los datos del Q3, los productos con mejor margen fueron:
+
+1. **Software de Gestión Pro** — Margen del 78%
+2. **Licencias Anuales Cloud** — Margen del 65%
+3. **Consultoría Estratégica** — Margen del 62%
+
+Los productos con menor rotación pero alto margen (oportunidad de upsell) fueron los módulos de Business Intelligence. Te recomiendo enfocar campañas de marketing en estos últimos para el Q4.`;
+
+const DEMO_MSG_3_USER = "Dame ejemplos de componentes React con shadcn/ui para un dashboard de analytics.";
+
+const DEMO_MSG_3_ASSISTANT = `Aquí tienes una estructura recomendada para un dashboard de analytics:
+
+\`\`\`tsx
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { BarChart, LineChart } from "@/components/charts";
+
+export function AnalyticsDashboard() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <MetricCard title="Usuarios Activos" value="12.4K" trend="+8%" />
+      <MetricCard title="Ingresos" value="$48.2K" trend="+12%" />
+      <MetricCard title="Churn Rate" value="2.1%" trend="-0.5%" />
+      <ChartCard title="Crecimiento Mensual">
+        <LineChart data={growthData} />
+      </ChartCard>
+    </div>
+  );
+}
+\`\`\`
+
+Usa \`grid-cols-1 md:grid-cols-3\` para que sea responsive y las cards de shadcn/ui para mantener consistencia visual.`;
+
+const DEMO_MESSAGES: Record<string, Message[]> = {
+  'demo-session-1': [
+    { id: 'msg-1', session_id: 'demo-session-1', role: 'user', content: DEMO_MSG_1_USER, created_at: new Date(Date.now() - 3500000).toISOString() },
+    { id: 'msg-2', session_id: 'demo-session-1', role: 'assistant', content: DEMO_MSG_1_ASSISTANT, created_at: new Date(Date.now() - 3490000).toISOString() },
+  ],
+  'demo-session-2': [
+    { id: 'msg-3', session_id: 'demo-session-2', role: 'user', content: DEMO_MSG_2_USER, created_at: new Date(Date.now() - 85000000).toISOString() },
+    { id: 'msg-4', session_id: 'demo-session-2', role: 'assistant', content: DEMO_MSG_2_ASSISTANT, created_at: new Date(Date.now() - 84900000).toISOString() },
+  ],
+  'demo-session-3': [
+    { id: 'msg-5', session_id: 'demo-session-3', role: 'user', content: DEMO_MSG_3_USER, created_at: new Date(Date.now() - 170000000).toISOString() },
+    { id: 'msg-6', session_id: 'demo-session-3', role: 'assistant', content: DEMO_MSG_3_ASSISTANT, created_at: new Date(Date.now() - 169000000).toISOString() },
+  ],
+};
 
 interface ChatStore {
   messages: Message[];
@@ -33,6 +151,7 @@ interface ChatStore {
   loadSession: (sessionId: string) => Promise<void>;
   createSession: (userId: string) => Promise<Session | null>;
   deleteSession: (sessionId: string) => Promise<void>;
+  updateSessionTitle: (sessionId: string, title: string) => Promise<void>;
   createTempSession: (userId: string) => void;
 }
 
@@ -49,9 +168,9 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
-  messages: [],
-  sessions: [],
-  currentSession: null,
+  messages: isDemoMode ? (DEMO_MESSAGES['demo-session-1'] ?? []) : [],
+  sessions: isDemoMode ? DEMO_SESSIONS : [],
+  currentSession: isDemoMode ? (DEMO_SESSIONS[0] ?? null) : null,
   isConnected: false,
   isLoading: false,
   isLoadingSessions: false,
@@ -63,13 +182,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   })),
 
   updateLastMessage: (content) => set((state) => {
-    // Clona el array de mensajes
     const messages = [...state.messages];
     if (messages.length === 0) return { messages };
-
     const lastMessage = messages[messages.length - 1];
-    
-    // Solo actualizamos si el último es del asistente
     if (lastMessage && lastMessage.role === 'assistant') {
       messages[messages.length - 1] = {
         ...lastMessage,
@@ -82,10 +197,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   updateLastMessageAudio: (audioUrl) => set((state) => {
     const messages = [...state.messages];
     if (messages.length === 0) return { messages };
-
     const lastMessage = messages[messages.length - 1];
-    
-    // Solo actualizamos si el último es del asistente
     if (lastMessage && lastMessage.role === 'assistant') {
       messages[messages.length - 1] = {
         ...lastMessage,
@@ -112,6 +224,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // Async actions
   loadSessions: async (userId: string) => {
+    if (isDemoMode) {
+      set({ sessions: DEMO_SESSIONS, isLoadingSessions: false });
+      return;
+    }
     set({ isLoadingSessions: true, error: null });
     try {
       const headers = await getAuthHeaders();
@@ -127,8 +243,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  // --- FUNCIÓN ACTUALIZADA ---
   loadSession: async (sessionId: string) => {
+    if (isDemoMode) {
+      const demoMessages = DEMO_MESSAGES[sessionId] ?? [];
+      const session = DEMO_SESSIONS.find(s => s.id === sessionId) ?? null;
+      set({ messages: demoMessages, currentSession: session, isLoading: false });
+      return;
+    }
     set({ isLoading: true, error: null });
     try {
       const headers = await getAuthHeaders();
@@ -138,30 +259,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       
       const data = await response.json();
       
-      // TRANSFORMACIÓN DE DATOS (IMPORTANTE)
-      // El backend devuelve: { id: 0/1, msg: "...", date: "..." }
-      // El frontend necesita: { role: 'user'/'assistant', content: "...", ... }
-      
       const rawMessages = data.messages || [];
       
       const formattedMessages: Message[] = rawMessages.map((msg: any, index: number) => ({
-        // Creamos un ID único compuesto para React keys
         id: `${sessionId}-${index}-${new Date(msg.date).getTime()}`,
         session_id: sessionId,
-        // Convertimos 0 -> user, 1 -> assistant
         role: msg.id === 0 ? 'user' : 'assistant',
-        // Mapeamos msg -> content
         content: msg.msg || '',
         created_at: msg.date
       }));
       
-      // Buscar la sesión en la lista actual para setear currentSession
       const sessions = get().sessions;
       const session = sessions.find(s => s.id === sessionId);
       
       set({ 
         messages: formattedMessages,
-        currentSession: session || null, // Si no está en la lista (ej: carga directa por URL), puede ser null por ahora
+        currentSession: session || null,
         isLoading: false 
       });
 
@@ -175,6 +288,23 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   createSession: async (userId: string) => {
+    if (isDemoMode) {
+      const newSession: Session = {
+        id: `demo-${Date.now()}`,
+        user_id: userId,
+        title: 'Nueva conversación',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      set((state) => ({
+        sessions: [newSession, ...state.sessions],
+        currentSession: newSession,
+        messages: [],
+        isLoading: false,
+      }));
+      return newSession;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const headers = await getAuthHeaders();
@@ -209,6 +339,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   deleteSession: async (sessionId: string) => {
+    if (isDemoMode) {
+      set((state) => {
+        const sessions = state.sessions.filter(s => s.id !== sessionId);
+        const currentSession = state.currentSession?.id === sessionId ? null : state.currentSession;
+        const messages = state.currentSession?.id === sessionId ? [] : state.messages;
+        return { sessions, currentSession, messages };
+      });
+      return;
+    }
+
     try {
       const headers = await getAuthHeaders();
       const response = await fetch(`${API_URL}/sessions/${sessionId}`, {
@@ -220,7 +360,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       
       set((state) => {
         const sessions = state.sessions.filter(s => s.id !== sessionId);
-        // Si borramos la sesión actual, limpiamos la vista
         const currentSession = state.currentSession?.id === sessionId ? null : state.currentSession;
         const messages = state.currentSession?.id === sessionId ? [] : state.messages;
         
@@ -234,6 +373,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   updateSessionTitle: async (sessionId: string, title: string) => {
+    if (isDemoMode) {
+      set((state) => {
+        const sessions = state.sessions.map(s => s.id === sessionId ? { ...s, title } : s);
+        const currentSession = state.currentSession?.id === sessionId ? { ...state.currentSession, title } : state.currentSession;
+        return { sessions, currentSession };
+      });
+      return;
+    }
+
     try {
       const headers = await getAuthHeaders();
       const response = await fetch(`${API_URL}/sessions/${sessionId}`, {

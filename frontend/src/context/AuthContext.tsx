@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { getDemoUser, clearDemoUser } from '../lib/demoMode';
 import type { User as AppUser } from '../types';
-import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: AppUser | null;
-  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -17,26 +16,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          created_at: session.user.created_at || new Date().toISOString(),
-        });
-      }
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -44,7 +28,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           created_at: session.user.created_at || new Date().toISOString(),
         });
       } else {
-        setUser(null);
+        // Check demo user fallback
+        const demoUser = getDemoUser();
+        if (demoUser) {
+          setUser(demoUser);
+        }
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          created_at: session.user.created_at || new Date().toISOString(),
+        });
+      } else {
+        const demoUser = getDemoUser();
+        setUser(demoUser);
       }
       setIsLoading(false);
     });
@@ -64,15 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearDemoUser();
     setUser(null);
-    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
         isLoading,
         isAuthenticated: !!user,
         signIn,

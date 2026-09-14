@@ -3,17 +3,46 @@ import { useChatStore } from '../store/chatStore';
 import { supabase } from '../lib/supabaseClient';
 import type { Message } from '../types';
 
-const API_URL = process.env.BUN_PUBLIC_API_URL || 'http://localhost:8000';
-let WS_URL = process.env.BUN_PUBLIC_WS_URL;
+// Helper seguro para leer variables de entorno
+function getEnv(): Record<string, string | undefined> {
+  try {
+    const env = (import.meta as any).env;
+    return env || {};
+  } catch {
+    return {};
+  }
+}
+
+const env = getEnv();
+const API_URL = (env.BUN_PUBLIC_API_URL || env.VITE_API_URL || 'http://localhost:8000') as string;
+let WS_URL = (env.BUN_PUBLIC_WS_URL || env.VITE_WS_URL) as string | undefined;
+
+const hasCredentials = !!(env.VITE_SUPABASE_URL || env.SUPABASE_URL);
+const isDemoMode = !hasCredentials;
 
 // TRUCO: Si WS_URL no carga por algún motivo, la construimos desde API_URL
 if (!WS_URL || WS_URL.includes('localhost')) {
   if (!API_URL.includes('localhost')) {
-    // Si la API es https://...render.com, convertimos a wss://...render.com
     WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
   } else {
     WS_URL = 'ws://localhost:8000';
   }
+}
+
+// Demo responses
+const DEMO_RESPONSES = {
+  default: 'Este es un modo de demostración. Configura las variables de entorno (VITE_SUPABASE_URL, VITE_API_URL) para conectar con el backend real.\n\nPuedes probar todas las funcionalidades de la UI: enviar mensajes, cambiar entre conversaciones, abrir paneles de herramientas, cambiar el tema, etc.',
+  hola: '¡Hola! Bienvenido a Aura AI. ¿En qué puedo ayudarte hoy?',
+  sql: 'Para optimizar consultas SQL, considera:\n\n1. Crear índices en columnas de `WHERE`, `JOIN` y `ORDER BY`\n2. Usar `EXPLAIN ANALYZE` para identificar Sequential Scans\n3. Evitar `SELECT *` y seleccionar solo columnas necesarias\n4. Usar particiones para tablas grandes\n\n¿Tienes una consulta específica que quieras revisar?',
+  react: 'Algunos patrones útiles en React:\n\n```tsx\n// Custom hook para fetch\nfunction useData(url: string) {\n  const [data, setData] = useState(null);\n  useEffect(() => {\n    fetch(url).then(r => r.json()).then(setData);\n  }, [url]);\n  return data;\n}\n```\n\n¿Necesitas ayuda con algún componente específico?',
+} as const;
+
+function getDemoResponse(content: string): string {
+  const lower = content.toLowerCase();
+  if (lower.includes('hola') || lower.includes('hi')) return DEMO_RESPONSES.hola;
+  if (lower.includes('sql') || lower.includes('query') || lower.includes('base de datos')) return DEMO_RESPONSES.sql;
+  if (lower.includes('react') || lower.includes('component')) return DEMO_RESPONSES.react;
+  return DEMO_RESPONSES.default;
 }
 
 export function useChat(sessionId: string | null) {
@@ -37,6 +66,7 @@ export function useChat(sessionId: string | null) {
 
   // 1. NUEVA FUNCIÓN: Cargar historial con el nuevo formato JSONB
   const fetchMessages = useCallback(async (sid: string) => {
+    if (isDemoMode) return; // Demo data ya está en el store
     if (!sid) return;
 
     try {
@@ -55,20 +85,17 @@ export function useChat(sessionId: string | null) {
 
       const data = await response.json();
       
-      // TRANSFORMACIÓN DE DATOS: 
-      // Backend { id: 0/1, msg: "..." } -> Frontend { role: "user"/"assistant", content: "..." }
       const formattedMessages: Message[] = (data.messages || []).map((msg: any, index: number) => ({
-        id: `${sid}-${index}-${new Date(msg.date).getTime()}`, // Generamos un ID único para React
+        id: `${sid}-${index}-${new Date(msg.date).getTime()}`,
         session_id: sid,
-        role: msg.id === 0 ? 'user' : 'assistant', // 0 es usuario, 1 es asistente
-        content: msg.msg, // 'msg' es la nueva key del backend
+        role: msg.id === 0 ? 'user' : 'assistant',
+        content: msg.msg,
         created_at: msg.date,
       }));
 
-      setMessages(formattedMessages); // Actualizamos el store con el historial
+      setMessages(formattedMessages);
     } catch (err) {
       console.error('Error fetching messages:', err);
-      // No seteamos error global para no bloquear la UI si solo falla el historial
     }
   }, [setMessages]);
 
@@ -77,13 +104,18 @@ export function useChat(sessionId: string | null) {
     if (sessionId) {
       fetchMessages(sessionId);
     } else {
-      setMessages([]); // Limpiar si no hay sesión
+      setMessages([]);
     }
   }, [sessionId, fetchMessages, setMessages]);
 
 
-  // 3. Connect to WebSocket (Ligeramente ajustado)
+  // 3. Connect to WebSocket
   const connect = useCallback(async () => {
+    if (isDemoMode) {
+      setIsConnected(false);
+      return;
+    }
+
     if (isConnectingRef.current || wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
@@ -119,7 +151,6 @@ export function useChat(sessionId: string | null) {
           
           if (data.type === 'session') {
             console.log('Session established:', data.session_id);
-            // Opcional: Si el backend devuelve un ID nuevo, podrías actualizar la URL
             return;
           }
           
@@ -128,7 +159,6 @@ export function useChat(sessionId: string | null) {
               isStreamingRef.current = true;
               setIsStreaming(true);
               
-              // El primer token crea el mensaje del asistente
               const newMessage: Message = {
                 id: `temp-${Date.now()}`,
                 session_id: sessionId || '',
@@ -138,14 +168,12 @@ export function useChat(sessionId: string | null) {
               };
               addMessage(newMessage);
             } else {
-              // Los siguientes tokens actualizan el último mensaje
               updateLastMessage(data.content || '');
             }
             return;
           }
 
           if (data.type === 'audio') {
-            // Handle audio URL from backend
             if (data.audio_url) {
               updateLastMessageAudio(data.audio_url);
             }
@@ -157,13 +185,9 @@ export function useChat(sessionId: string | null) {
             setIsStreaming(false);
             setIsLoading(false);
             
-            // Update with audio_url if provided in done message
             if (data.audio_url) {
               updateLastMessageAudio(data.audio_url);
             }
-            
-            // Opcional: Recargar historial completo para asegurar sincronización con DB
-            // if (sessionId) fetchMessages(sessionId); 
             return;
           }
           
@@ -183,8 +207,6 @@ export function useChat(sessionId: string | null) {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        // No mostrar error visual inmediato si es solo reconexión silenciosa
-        // setError('Connection error'); 
         setIsConnected(false);
         isConnectingRef.current = false;
       };
@@ -208,7 +230,7 @@ export function useChat(sessionId: string | null) {
     }
   }, [sessionId, addMessage, updateLastMessage, updateLastMessageAudio, setIsConnected, setIsLoading, setError]);
 
-  // 4. Send Message (Igual que antes)
+  // 4. Send Message
   const sendMessage = useCallback(async (content: string, overrideSessionId?: string, enableVoice: boolean = false) => {
     if (!content.trim()) return;
 
@@ -219,7 +241,6 @@ export function useChat(sessionId: string | null) {
     }
     tokenRef.current = session.access_token;
     
-    // Use override sessionId if provided, otherwise use the hook's sessionId
     const targetSessionId = overrideSessionId || sessionId;
 
     // Optimistic UI update
@@ -231,6 +252,24 @@ export function useChat(sessionId: string | null) {
       created_at: new Date().toISOString(),
     };
     addMessage(userMessage);
+
+    if (isDemoMode) {
+      // Simulate AI response in demo mode
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        const response = getDemoResponse(content);
+        const assistantMessage: Message = {
+          id: `assistant-${Date.now()}`,
+          session_id: targetSessionId || '',
+          role: 'assistant',
+          content: response,
+          created_at: new Date().toISOString(),
+        };
+        addMessage(assistantMessage);
+      }, 1500);
+      return;
+    }
 
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       await connect();
@@ -268,7 +307,9 @@ export function useChat(sessionId: string | null) {
   }, [sessionId, connect, addMessage, setIsLoading, setError]);
 
   useEffect(() => {
-    connect();
+    if (!isDemoMode) {
+      connect();
+    }
     return () => {
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) wsRef.current.close();

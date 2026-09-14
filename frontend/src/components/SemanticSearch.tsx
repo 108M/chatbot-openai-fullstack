@@ -20,7 +20,6 @@ export function SemanticSearch() {
   const [addingDocument, setAddingDocument] = useState(false);
   const [documentContent, setDocumentContent] = useState('');
 
-  // Load documents on component mount
   useEffect(() => {
     loadDocuments();
   }, []);
@@ -96,19 +95,19 @@ export function SemanticSearch() {
   return (
     <div className="w-full flex flex-col h-full gap-4">
       {error && (
-        <div className="p-3 bg-red-100 text-red-700 rounded text-sm">
+        <div className="p-3 bg-error-container/20 text-error rounded text-sm">
           {error}
         </div>
       )}
 
       {/* Tab buttons */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 border-b border-outline-variant">
         <button
           onClick={() => setActiveTab('search')}
           className={`pb-2 px-3 text-sm transition-all ${
             activeTab === 'search'
-              ? 'border-b-2 border-blue-500 font-semibold text-gray-900 dark:text-white'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'border-b-2 border-primary font-semibold text-on-surface'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           Buscar
@@ -117,8 +116,8 @@ export function SemanticSearch() {
           onClick={() => setActiveTab('documents')}
           className={`pb-2 px-3 text-sm transition-all ${
             activeTab === 'documents'
-              ? 'border-b-2 border-blue-500 font-semibold text-gray-900 dark:text-white'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              ? 'border-b-2 border-primary font-semibold text-on-surface'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           Docs ({documents.length})
@@ -144,15 +143,15 @@ export function SemanticSearch() {
 
           {results.length > 0 && (
             <div className="space-y-2 overflow-y-auto flex-1">
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-on-surface-variant">
                 {results.length} resultado{results.length > 1 ? 's' : ''}
               </p>
               {results.map((result) => (
-                <div key={result.id} className="p-2 border rounded bg-slate-50 dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-xs space-y-1">
-                  <p className="text-gray-700 dark:text-gray-300 line-clamp-3">
+                <div key={result.id} className="p-2 border rounded bg-surface-container-low border-outline-variant text-xs space-y-1">
+                  <p className="text-on-surface-variant line-clamp-3">
                     {result.content}
                   </p>
-                  <p className="text-blue-600 dark:text-blue-400 font-semibold">
+                  <p className="text-primary font-semibold">
                     {(result.similarity * 100).toFixed(0)}%
                   </p>
                 </div>
@@ -161,7 +160,7 @@ export function SemanticSearch() {
           )}
 
           {results.length === 0 && query && !loading && (
-            <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
+            <p className="text-center text-on-surface-variant text-sm py-4">
               Sin resultados
             </p>
           )}
@@ -172,10 +171,10 @@ export function SemanticSearch() {
       {activeTab === 'documents' && (
         <div className="space-y-3 flex flex-col h-full">
           {/* Add new document */}
-          <div className="space-y-2 p-3 bg-gray-50 dark:bg-slate-800 rounded border border-gray-200 dark:border-gray-700">
-            <label className="text-xs font-semibold text-gray-900 dark:text-white">Nuevo documento</label>
+          <div className="space-y-2 p-3 bg-surface-container-low rounded border border-outline-variant">
+            <label className="text-xs font-semibold text-on-surface">Nuevo documento</label>
             <textarea
-              className="w-full p-2 border rounded text-xs resize-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+              className="w-full p-2 border rounded text-xs resize-none bg-surface-container-lowest text-on-surface placeholder:text-outline border-outline-variant focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="Pega el contenido aquí..."
               value={documentContent}
               onChange={(e) => setDocumentContent(e.target.value)}
@@ -195,8 +194,8 @@ export function SemanticSearch() {
           <div className="space-y-2 overflow-y-auto flex-1">
             {documents.length > 0 ? (
               documents.map((doc) => (
-                <div key={doc.id} className="p-2 border rounded bg-slate-50 dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-xs space-y-1">
-                  <p className="text-gray-700 dark:text-gray-300 line-clamp-2">
+                <div key={doc.id} className="p-2 border rounded bg-surface-container-low border-outline-variant text-xs space-y-1">
+                  <p className="text-on-surface-variant line-clamp-2">
                     {doc.content}
                   </p>
                   <Button
@@ -210,7 +209,7 @@ export function SemanticSearch() {
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
+              <p className="text-center text-on-surface-variant text-sm py-4">
                 Sin documentos
               </p>
             )}

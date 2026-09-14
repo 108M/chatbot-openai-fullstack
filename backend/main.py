@@ -5,6 +5,10 @@ main.py - Backend arreglado para despliegue en Render
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Tus imports originales (NO LOS BORRES)
 from config import supabase
@@ -12,6 +16,14 @@ from routes.chat import websocket_chat
 from routes import sessions, audio, analysis, documents, system_prompts, elevenlabs_agent
 
 app = FastAPI(title="Chatbot API", version="1.0.0")
+
+# --- RATE LIMITING BÁSICO ---
+# Límite global por IP para evitar que una demo pública dispare la factura
+# de OpenAI/ElevenLabs. No cubre el WebSocket (SlowAPI solo aplica a HTTP).
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # --- CONFIGURACIÓN CORS BLINDADA ---
 # Esto permite que Vercel, Localhost y tu prima entren sin errores.
@@ -46,10 +58,11 @@ async def health_check():
 
 @app.get("/public-config")
 async def public_config():
-    """Serve public configuration (Agent ID, API Key) for frontend runtime loading"""
+    """Serve public configuration (Agent ID only) for frontend runtime loading.
+    The API key is intentionally NOT served here — it must not be handed out
+    to anonymous callers over an unauthenticated endpoint."""
     return {
         "elevenlabs_agent_id": os.getenv("ELEVENLABS_AGENT_ID", ""),
-        "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
     }
 
 if __name__ == "__main__":
